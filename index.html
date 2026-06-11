@@ -146,6 +146,13 @@ a:hover, a:focus-visible { color: var(--coral); outline: none; }
   border-top: 1px solid var(--border);
   overflow-x: auto;
   background: var(--bg-bar);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+.chips.show {
+  opacity: 1;
+  pointer-events: auto;
 }
 .chips::-webkit-scrollbar { display: none; }
 .chip {
@@ -601,6 +608,7 @@ const BOOT_LOG = [
   print(ASCII_LOGO, "ascii");
   print(`\n` + T().motto + `\n` + T().introSub + `\n`);
   cmdInput.disabled = false;
+  document.querySelector(".chips").classList.add("show");
   if (matchMedia("(pointer: fine)").matches) cmdInput.focus();
 })();
 </script>
