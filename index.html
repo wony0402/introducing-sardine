@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#070b12">
+<meta name="description" content="Sardine (wony0402) — terminal-style portfolio">
+<title>sardine@wony.dev: ~</title>
+<style>
+:root {
+  --bg: #070b12;
+  --bg-panel: #0c1220;
+  --bg-bar: #111a2c;
+  --ink: #c9d7e3;
+  --dim: #5a6b80;
+  --cyan: #79d4e6;
+  --coral: #ff8f73;
+  --green: #8be8b0;
+  --gold: #ffd479;
+  --border: #1c2940;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, "Nanum Gothic Coding", monospace;
+  font-size: 14px;
+  line-height: 1.55;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background-image: radial-gradient(ellipse 90% 70% at 50% -10%, #0d1a2e 0%, var(--bg) 60%);
+}
+.window {
+  width: 100%;
+  max-width: 860px;
+  height: min(86vh, 720px);
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 24px 60px rgba(0,0,0,.55), 0 0 0 1px rgba(121,212,230,.04);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.titlebar {
+  background: var(--bg-bar);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  user-select: none;
+}
+.dots { display: flex; gap: 7px; }
+.dot { width: 12px; height: 12px; border-radius: 50%; }
+.dot.r { background: #ff5f57; } .dot.y { background: #febc2e; } .dot.g { background: #28c840; }
+.titlebar .title {
+  flex: 1;
+  text-align: center;
+  color: var(--dim);
+  font-size: 12px;
+  letter-spacing: .04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.langs { display: flex; gap: 4px; }
+.lang-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--dim);
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: .08em;
+  padding: 2px 8px;
+  border-radius: 99px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.lang-btn.active { border-color: var(--cyan); color: var(--cyan); }
+.lang-btn:hover { color: var(--coral); border-color: var(--coral); }
+.status {
+  font-size: 10px;
+  color: var(--green);
+  border: 1px solid rgba(139,232,176,.35);
+  border-radius: 99px;
+  padding: 1px 8px;
+  letter-spacing: .12em;
+}
+.status::before { content: "●"; margin-right: 5px; animation: pulse 2s infinite; }
+@keyframes pulse { 50% { opacity: .3; } }
+
+#screen {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 18px 8px;
+  -webkit-overflow-scrolling: touch;
+  cursor: text;
+}
+#screen::-webkit-scrollbar { width: 8px; }
+#screen::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.line { white-space: pre-wrap; word-break: break-word; }
+.boot { font-size: 12.5px; color: var(--cyan); opacity: .85; }
+.boot .ok { color: var(--green); }
+.ascii {
+  color: var(--cyan);
+  font-size: 11px;
+  line-height: 1.25;
+  white-space: pre;
+  overflow-x: auto;
+  text-shadow: 0 0 14px rgba(121,212,230,.35);
+}
+.c-cyan { color: var(--cyan); }
+.c-coral { color: var(--coral); }
+.c-green { color: var(--green); }
+.c-gold { color: var(--gold); }
+.c-dim { color: var(--dim); }
+a { color: var(--cyan); text-decoration: underline; text-underline-offset: 3px; }
+a:hover, a:focus-visible { color: var(--coral); outline: none; }
+
+.prompt-row { display: flex; align-items: baseline; }
+.ps1 { white-space: nowrap; flex-shrink: 0; }
+.ps1 .u { color: var(--green); }
+.ps1 .h { color: var(--cyan); }
+#cmd {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--ink);
+  font: inherit;
+  caret-color: var(--coral);
+  min-width: 40px;
+}
+
+.chips {
+  flex-shrink: 0;
+  display: flex;
+  gap: 8px;
+  padding: 10px 14px 12px;
+  border-top: 1px solid var(--border);
+  overflow-x: auto;
+  background: var(--bg-bar);
+}
+.chips::-webkit-scrollbar { display: none; }
+.chip {
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--cyan);
+  font: inherit;
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: 99px;
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+.chip:hover, .chip:focus-visible { border-color: var(--coral); color: var(--coral); outline: none; }
+
+.fish-swim {
+  position: fixed;
+  left: -160px;
+  font-size: 22px;
+  color: var(--cyan);
+  pointer-events: none;
+  animation: swim 5s linear forwards;
+  z-index: 99;
+  text-shadow: 0 0 12px rgba(121,212,230,.6);
+}
+@keyframes swim {
+  from { transform: translateX(0) }
+  to { transform: translateX(calc(100vw + 320px)) }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fish-swim { animation-duration: 0.01s; }
+  .status::before { animation: none; }
+}
+@media (max-width: 600px) {
+  body { padding: 8px; }
+  .window { height: 92vh; height: 92dvh; border-radius: 8px; }
+  .ascii { font-size: 7.5px; }
+  body { font-size: 13px; }
+  .titlebar .title { font-size: 10px; }
+}
+</style>
+</head>
+<body>
+
+<div class="window" role="application" aria-label="Sardine terminal">
+  <div class="titlebar">
+    <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+    <div class="title">sardine@wony.dev: ~</div>
+    <div class="langs">
+      <button class="lang-btn active" data-lang="ko">KO</button>
+      <button class="lang-btn" data-lang="en">EN</button>
+    </div>
+    <div class="status">ONLINE</div>
+  </div>
+
+  <div id="screen" aria-live="polite"></div>
+
+  <div class="chips" aria-label="quick commands">
+    <button class="chip" data-cmd="help">help</button>
+    <button class="chip" data-cmd="about">about</button>
+    <button class="chip" data-cmd="projects">projects</button>
+    <button class="chip" data-cmd="skills">skills</button>
+    <button class="chip" data-cmd="contact">contact</button>
+    <button class="chip" data-cmd="fish">fish 🐟</button>
+    <button class="chip" data-cmd="clear">clear</button>
+  </div>
+</div>
+
+<script>
+// =====================================================
+//  DATA — 내용 수정은 여기서!
+// =====================================================
+const USER = "sardine";
+const HOST = "wony.dev";
+const GITHUB = "wony0402";
+let LANG = "ko"; // 기본 언어
+
+const ASCII_LOGO = String.raw`
+   _____                ___          
+  / ___/____ __________/ (_)___  ___ 
+  \__ \/ __ '/ ___/ __  / / __ \/ _ \
+ ___/ / /_/ / /  / /_/ / / / / /  __/
+/____/\__,_/_/   \__,_/_/_/ /_/\___/ 
+        ><(((º>  ·  ><(((º>  ·  ><(((º>`;
+
+const PROJECTS = [
+  {
+    name: "FLOWER_shoot 🔫",
+    url: "https://wony0402.github.io/FLOWER_shoot",
+    tags: ["MediaPipe", "Webcam", "Game"],
+    ko: "웹캠에 손가락 총을 겨누면 진짜로 발사된다. MediaPipe 손 추적으로 제스처를 인식해 쏘는 게임.",
+    en: "Point a finger gun at your webcam and it actually fires. Gesture-recognition shooter built with MediaPipe hand tracking."
+  },
+  {
+    name: "FLOWER_slash ⚔️",
+    url: "https://wony0402.github.io/FLOWER_slash",
+    tags: ["MediaPipe", "Webcam", "Game"],
+    ko: "손이 곧 칼이 되는 웹캠 게임. 화면 앞에서 손을 휘두르면 칼질이 나간다.",
+    en: "Your hand becomes the blade. Swing in front of the camera to slash — webcam sword game."
+  },
+  {
+    name: "Block Blast 🧩",
+    url: "https://wony0402.github.io/block-blast",
+    tags: ["HTML5", "Canvas", "Game"],
+    ko: "직접 만든 HTML5 블록 퍼즐 게임. 블록을 끌어다 줄을 완성하면 터진다. 모바일 터치 지원.",
+    en: "Self-built HTML5 block puzzle. Drag blocks, complete lines, watch them blast. Touch-friendly."
+  }
+];
+
+const STR = {
+  ko: {
+    helpTitle: "사용 가능한 명령어",
+    help: [
+      ["about", "누구냐면요"],
+      ["projects", "만든 것들"],
+      ["skills", "기술 스택"],
+      ["contact", "연락처 / 링크"],
+      ["banner", "로고 다시 보기"],
+      ["lang en", "switch to English"],
+      ["fish", "???"],
+      ["clear", "화면 지우기"]
+    ],
+    helpHint: "  Tab: 자동완성 · ↑↓: 명령어 기록",
+    about: () => `<span class="c-coral">정어리(Sardine)</span> — 대한민국 고등학생 🇰🇷
+
+작은 물고기지만 꿈은 큽니다.
+요즘은 <span class="c-cyan">아두이노</span>에 푹 빠져 있어요. 회로 잘 아시는 분, 같이 놀아요. 🔌
+<span class="c-cyan">Claude Code</span>를 무기로 혼자서 이것저것 만들며 도전 중입니다.
+
+그래도 본업은 학생 — 지금 제일 진심인 건 <span class="c-gold">공부</span>예요.
+최애 과목은 <span class="c-coral">수학</span>이랑 <span class="c-coral">과학</span>. 숫자랑 원리가 제일 재밌습니다.
+
+<span class="c-dim">"일단 만들어보고, 안 되면 되게 한다."</span>`,
+    projTitle: "프로젝트 목록",
+    skills: () => `<span class="c-gold">기술 스택</span>
+  <span class="c-cyan">Languages</span>   JavaScript · Python · C++(Arduino)
+  <span class="c-cyan">AI / CV</span>     MediaPipe Hands · TensorFlow.js
+  <span class="c-cyan">Web</span>         HTML5 Canvas · GitHub Pages
+  <span class="c-cyan">Hardware</span>    Arduino Nano · I2C LCD
+  <span class="c-cyan">Tools</span>       VS Code · Claude Code · Git`,
+    contact: () => `<span class="c-gold">링크</span>
+  GitHub  <a href="https://github.com/${GITHUB}" target="_blank" rel="noopener">github.com/${GITHUB}</a>
+  Pages   <a href="https://${GITHUB}.github.io" target="_blank" rel="noopener">${GITHUB}.github.io</a>
+  Email   <a href="mailto:sardine0402@gmail.com">sardine0402@gmail.com</a>`,
+    motto: `<span class="c-gold">"안 되면 되게 하라"</span> <span class="c-dim">— 정어리의 좌우명</span>`,
+    introSub: `<span class="c-dim">대한민국 고등학생 · 웹캠 게임 & 아두이노 · ><(((º></span>
+<span class="c-gold">'help'</span><span class="c-dim">를 입력하거나 아래 버튼을 눌러보세요.</span>`,
+    fishMsg: `<span class="c-cyan">정어리 떼 출현!!! ><(((º> ><(((º> ><(((º> ><(((º> ><(((º></span>`,
+    sudo: `<span class="c-coral">sardine은 sudoers 파일에 없습니다. 이 사건은 보고됩니다. 🐟📋</span>`,
+    exit: `<span class="c-dim">바다에서는 로그아웃할 수 없습니다.</span>`,
+    notFound: (c) => `<span class="c-coral">${c}</span>: 명령어를 찾을 수 없습니다. <span class="c-dim">'help'를 입력해보세요.</span>`,
+    catNo: (f) => `cat: ${f}: 그런 파일 없음`,
+    langSet: `<span class="c-green">언어가 한국어로 설정되었습니다. 🇰🇷</span>`,
+    granted: `██ ACCESS GRANTED ██  연결되었습니다 ✓`,
+    fw: "> firewall detected... 우회 경로 탐색 중",
+    root: "> root access 요청 중..."
+  },
+  en: {
+    helpTitle: "Available commands",
+    help: [
+      ["about", "who am I"],
+      ["projects", "things I built"],
+      ["skills", "tech stack"],
+      ["contact", "links"],
+      ["banner", "show logo again"],
+      ["lang ko", "한국어로 전환"],
+      ["fish", "???"],
+      ["clear", "clear screen"]
+    ],
+    helpHint: "  Tab: autocomplete · ↑↓: command history",
+    about: () => `<span class="c-coral">Sardine</span> — high school student from South Korea 🇰🇷
+
+A small fish with big dreams.
+Currently obsessed with <span class="c-cyan">Arduino</span> — if you know circuits, let's talk. 🔌
+Building all kinds of projects solo, with <span class="c-cyan">Claude Code</span> as my weapon of choice.
+
+But first and foremost, I'm a student — <span class="c-gold">studying</span> comes first.
+Favorite subjects: <span class="c-coral">math</span> and <span class="c-coral">science</span>. Numbers and how things work — that's the fun part.
+
+<span class="c-dim">"Build first. If it doesn't work, make it work."</span>`,
+    projTitle: "Projects",
+    skills: () => `<span class="c-gold">Tech stack</span>
+  <span class="c-cyan">Languages</span>   JavaScript · Python · C++(Arduino)
+  <span class="c-cyan">AI / CV</span>     MediaPipe Hands · TensorFlow.js
+  <span class="c-cyan">Web</span>         HTML5 Canvas · GitHub Pages
+  <span class="c-cyan">Hardware</span>    Arduino Nano · I2C LCD
+  <span class="c-cyan">Tools</span>       VS Code · Claude Code · Git`,
+    contact: () => `<span class="c-gold">Links</span>
+  GitHub  <a href="https://github.com/${GITHUB}" target="_blank" rel="noopener">github.com/${GITHUB}</a>
+  Pages   <a href="https://${GITHUB}.github.io" target="_blank" rel="noopener">${GITHUB}.github.io</a>
+  Email   <a href="mailto:sardine0402@gmail.com">sardine0402@gmail.com</a>`,
+    motto: `<span class="c-gold">"If it doesn't work, make it work."</span> <span class="c-dim">— Sardine's motto</span>`,
+    introSub: `<span class="c-dim">High schooler from Korea · webcam games & Arduino · ><(((º></span>
+<span class="c-dim">Type </span><span class="c-gold">'help'</span><span class="c-dim"> or tap a button below.</span>`,
+    fishMsg: `<span class="c-cyan">A school of sardines!!! ><(((º> ><(((º> ><(((º> ><(((º> ><(((º></span>`,
+    sudo: `<span class="c-coral">sardine is not in the sudoers file. This incident will be reported. 🐟📋</span>`,
+    exit: `<span class="c-dim">You can't log out of the ocean.</span>`,
+    notFound: (c) => `<span class="c-coral">${c}</span>: command not found. <span class="c-dim">Try 'help'.</span>`,
+    catNo: (f) => `cat: ${f}: no such file`,
+    langSet: `<span class="c-green">Language set to English. 🇺🇸</span>`,
+    granted: `██ ACCESS GRANTED ██  Connection established ✓`,
+    fw: "> firewall detected... searching for bypass route",
+    root: "> requesting root access..."
+  }
+};
+const T = () => STR[LANG];
+</script>
+<script>
+// =====================================================
+//  TERMINAL ENGINE
+// =====================================================
+const screen = document.getElementById("screen");
+let history = [], histIdx = -1;
+
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function print(html, cls = "line") {
+  const div = document.createElement("div");
+  div.className = cls;
+  div.innerHTML = html;
+  screen.insertBefore(div, inputRow());
+  scrollDown();
+}
+function inputRow(){ return document.getElementById("input-row"); }
+function scrollDown(){ screen.scrollTop = screen.scrollHeight; }
+
+const PS1 = `<span class="ps1"><span class="u">${USER}</span><span class="c-dim">@</span><span class="h">${HOST}</span><span class="c-dim">:~$ </span></span>`;
+
+// ===== COMMANDS =====
+const commands = {
+  help() {
+    let out = `<span class="c-gold">${T().helpTitle}</span>\n`;
+    T().help.forEach(([c, d]) => {
+      out += `  <span class="c-cyan">${c.padEnd(9)}</span> ${d}\n`;
+    });
+    out += `<span class="c-dim">${T().helpHint}</span>`;
+    print(out);
+  },
+  about() { print(T().about()); },
+  projects() {
+    let out = `<span class="c-gold">${T().projTitle}</span> <span class="c-dim">(${PROJECTS.length})</span>\n`;
+    PROJECTS.forEach(p => {
+      out += `
+<span class="c-coral">▸ ${esc(p.name)}</span>  <span class="c-dim">${p.tags.map(t=>"["+t+"]").join(" ")}</span>
+  ${esc(p[LANG])}
+  <a href="${p.url}" target="_blank" rel="noopener">${p.url}</a>\n`;
+    });
+    print(out);
+  },
+  skills() { print(T().skills()); },
+  contact() { print(T().contact()); },
+  banner() {
+    print(ASCII_LOGO, "ascii");
+    print(`<span class="c-dim">terminal v2.0</span>\n` + T().motto);
+  },
+  lang(args) {
+    const target = (args[0] || "").toLowerCase();
+    if (target === "en" || target === "ko") setLang(target);
+    else print(`<span class="c-dim">usage: lang en | lang ko</span>`);
+  },
+  fish() {
+    const n = 22;
+    for (let i = 0; i < n; i++) {
+      setTimeout(() => {
+        const f = document.createElement("div");
+        f.className = "fish-swim";
+        f.textContent = Math.random() < .15 ? "><(((((º>" : "><(((º>";
+        f.style.top = (3 + Math.random() * 88) + "vh";
+        f.style.animationDuration = (2.2 + Math.random() * 4.5) + "s";
+        f.style.fontSize = (10 + Math.random() * 24) + "px";
+        f.style.opacity = .5 + Math.random() * .5;
+        document.body.appendChild(f);
+        setTimeout(() => f.remove(), 8000);
+      }, i * 130);
+    }
+    print(T().fishMsg);
+  },
+  clear() {
+    [...screen.children].forEach(c => { if (c.id !== "input-row") c.remove(); });
+  },
+  whoami() { print(USER); },
+  date() { print(new Date().toLocaleString(LANG === "ko" ? "ko-KR" : "en-US")); },
+  ls() { print(`<span class="c-cyan">projects/</span>  <span class="c-cyan">skills/</span>  about.txt  contact.txt  <span class="c-dim">secret.fish</span>`); },
+  sudo() { print(T().sudo); },
+  exit() { print(T().exit); },
+};
+commands.cat = (args) => {
+  if (args[0] === "secret.fish") commands.fish();
+  else if (args[0] === "about.txt") commands.about();
+  else if (args[0] === "contact.txt") commands.contact();
+  else print(T().catNo(esc(args[0] || "")));
+};
+
+function setLang(l) {
+  LANG = l;
+  document.documentElement.lang = l;
+  document.querySelectorAll(".lang-btn").forEach(b =>
+    b.classList.toggle("active", b.dataset.lang === l));
+  print(T().langSet);
+}
+
+function run(raw) {
+  const input = raw.trim();
+  print(PS1 + esc(input), "line prompt-echo");
+  if (!input) return;
+  history.push(input); histIdx = history.length;
+  const [cmd, ...args] = input.split(/\s+/);
+  const fn = commands[cmd.toLowerCase()];
+  if (fn) fn(args);
+  else print(T().notFound(esc(cmd)));
+}
+
+// ===== INPUT SETUP =====
+const row = document.createElement("div");
+row.className = "prompt-row";
+row.id = "input-row";
+row.innerHTML = PS1 + `<input id="cmd" autocomplete="off" autocapitalize="none" spellcheck="false" aria-label="command input">`;
+screen.appendChild(row);
+const cmdInput = document.getElementById("cmd");
+
+cmdInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") { run(cmdInput.value); cmdInput.value = ""; }
+  else if (e.key === "ArrowUp") { e.preventDefault(); if (histIdx > 0) cmdInput.value = history[--histIdx]; }
+  else if (e.key === "ArrowDown") { e.preventDefault(); cmdInput.value = (histIdx < history.length - 1) ? history[++histIdx] : (histIdx = history.length, ""); }
+  else if (e.key === "Tab") {
+    e.preventDefault();
+    const v = cmdInput.value.toLowerCase();
+    if (!v) return;
+    const match = Object.keys(commands).filter(c => c.startsWith(v));
+    if (match.length === 1) cmdInput.value = match[0];
+    else if (match.length > 1) print(`<span class="c-dim">${match.join("  ")}</span>`);
+  }
+});
+screen.addEventListener("click", () => cmdInput.focus());
+document.querySelectorAll(".chip").forEach(b =>
+  b.addEventListener("click", () => { run(b.dataset.cmd); cmdInput.focus(); })
+);
+document.querySelectorAll(".lang-btn").forEach(b =>
+  b.addEventListener("click", () => setLang(b.dataset.lang))
+);
+</script>
+<script>
+// =====================================================
+//  BOOT SEQUENCE — 리눅스 부팅 + 해킹 침투 인트로
+// =====================================================
+function hex(n){ return [...Array(n)].map(()=>"0123456789ABCDEF"[Math.random()*16|0]).join(""); }
+function hackLine() {
+  const pick = Math.random();
+  if (pick < .3) return `0x${hex(8)}  ${hex(2)} ${hex(2)} ${hex(2)} ${hex(2)}  ${hex(2)} ${hex(2)} ${hex(2)} ${hex(2)}  ..ok`;
+  if (pick < .5) return `> scanning port ${1000 + (Math.random()*9000|0)} ........ OPEN`;
+  if (pick < .65) return `> decrypting node [${hex(6)}] :: ${(Math.random()*100|0)}%`;
+  if (pick < .8) return `> bypass firewall layer ${(Math.random()*9|0)+1} ... done`;
+  return `> inject packet ${hex(4)}-${hex(4)} >> deep_sea_network`;
+}
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const bootPrint = (msg) => print(msg, "line boot");
+
+// [ms 지연, 출력 내용] — 리눅스 부팅 로그
+const BOOT_LOG = [
+  [400, `SeaBIOS (version sardine-terminal)`],
+  [500, `Booting from Hard Disk...`],
+  [600, `GRUB loading.`],
+  [300, `Welcome to GRUB!`],
+  [700, ``],
+  [200, `Loading Linux 6.8.0-sardine ...`],
+  [450, `Loading initial ramdisk ...`],
+  [500, `[    0.000000] Linux version 6.8.0-sardine (deep-sea-build)`],
+  [60,  `[    0.000000] Command line: BOOT_IMAGE=/boot/vmlinuz root=/dev/ocean`],
+  [50,  `[    0.004040] Kernel command line parsed`],
+  [80,  `[    0.013370] Memory: imagination cache initialized`],
+  [60,  `[    0.040400] random: crng init done`],
+  [120, `[    0.404000] systemd[1]: systemd 255 running in system mode`],
+  [90,  `[    0.777000] systemd[1]: Detected architecture x86-64`],
+  [300, `[  <span class="ok">OK</span>  ] Reached target Local File Systems.`],
+  [110, `[  <span class="ok">OK</span>  ] Started Journal Service.`],
+  [140, `[  <span class="ok">OK</span>  ] Reached target Network.`],
+  [180, `[  <span class="ok">OK</span>  ] Started OpenBSD Secure Shell server.`],
+  [220, `[  <span class="ok">OK</span>  ] Started mediapipe-hands.service`],
+  [160, `[  <span class="ok">OK</span>  ] Started arduino-uploader.service`],
+  [200, `[  <span class="ok">OK</span>  ] Started math-and-science.service`],
+  [240, `[  <span class="ok">OK</span>  ] Started fish-school.service ><(((º>`],
+  [500, ``],
+  [300, `Ubuntu Server 24.04 LTS sardine tty1`],
+  [800, ``],
+];
+
+(async () => {
+  cmdInput.disabled = true;
+
+  // 1) 리눅스 부팅 로그
+  for (const [delay, msg] of BOOT_LOG) {
+    await sleep(delay);
+    if (msg) bootPrint(msg);
+  }
+
+  // 2) 로그인 — 타이핑 연출
+  const loginLine = document.createElement("div");
+  loginLine.className = "line boot";
+  screen.insertBefore(loginLine, inputRow());
+  loginLine.innerHTML = `${HOST} login: `;
+  await sleep(600);
+  for (const ch of USER) {
+    loginLine.innerHTML += ch;
+    scrollDown();
+    await sleep(90 + Math.random() * 110);
+  }
+  await sleep(500);
+  const pwLine = document.createElement("div");
+  pwLine.className = "line boot";
+  screen.insertBefore(pwLine, inputRow());
+  pwLine.innerHTML = `Password: `;
+  await sleep(450);
+  for (let i = 0; i < 8; i++) {
+    pwLine.innerHTML += "*";
+    scrollDown();
+    await sleep(70 + Math.random() * 90);
+  }
+  await sleep(700);
+  bootPrint(`Last login: ${new Date().toLocaleString("en-US")} from browser.local`);
+  await sleep(400);
+  bootPrint(`restoring terminal state ............ <span class="ok">OK</span>`);
+  await sleep(250);
+  bootPrint(`rebuilding prompt .................... <span class="ok">OK</span>`);
+  await sleep(250);
+  bootPrint(`loading sardine profile .............. <span class="ok">OK</span>`);
+  await sleep(800);
+
+  // 3) 해킹 침투 — 빠른 로그와 멈칫거림의 리듬
+  const burst = async (count, speed) => {
+    for (let i = 0; i < count; i++) {
+      print(`<span class="c-green" style="opacity:.8;font-size:12px">${hackLine()}</span>`);
+      await sleep(speed + Math.random() * speed);
+    }
+  };
+  await burst(8, 25);
+  await sleep(550);
+  print(`<span class="c-cyan">${T().fw}</span>`);
+  await sleep(800);
+  await burst(10, 20);
+  await sleep(650);
+  print(`<span class="c-cyan">${T().root}</span>`);
+  await sleep(900);
+  await burst(7, 30);
+  await sleep(700);
+  print(`<span class="c-gold">>>> TARGET LOCKED: ${HOST}</span>`);
+  await sleep(950);
+  print(`<span class="c-cyan" style="text-shadow:0 0 10px rgba(121,212,230,.7)">${T().granted}</span>`);
+  await sleep(1300);
+
+  // 4) 화면 정리 후 인트로
+  commands.clear();
+  print(ASCII_LOGO, "ascii");
+  print(`\n` + T().motto + `\n` + T().introSub + `\n`);
+  cmdInput.disabled = false;
+  if (matchMedia("(pointer: fine)").matches) cmdInput.focus();
+})();
+</script>
+</body>
+</html>
